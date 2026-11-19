@@ -1,0 +1,9 @@
+# Documento interno (notas legales y de negocio): no se publica
+CUMPLIMIENTO.md
+
+# Sistema / editores
+Thumbs.db
+desktop.ini
+.DS_Store
+.vscode/
+*.tmp
