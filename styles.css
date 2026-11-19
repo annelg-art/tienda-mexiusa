@@ -654,3 +654,6 @@ em { font-family: var(--serif); font-style: italic; font-weight: 500; }
 .ccard__exp { position: absolute; right: 18px; bottom: 16px; font-size: 12px; opacity: .9; }
 #payBtn:disabled { opacity: .7; cursor: progress; }
 @media (max-width: 720px) { .cardpay__body { grid-template-columns: 1fr; } .ccard { max-width: 300px; width: 100%; justify-self: center; } }
+.cardpay__fields { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.cardpay__fields .field { min-width: 0; }
+.cardpay__fields .field input { width: 100%; min-width: 0; }
