@@ -6,9 +6,10 @@ MEXIUSA Soluciones Comerciales tiene aquí su tienda en línea. Es un sitio est�
 
 1. El cliente arma su carrito y captura sus datos de entrega.
 2. El envío se calcula en el momento: es **gratis en CDMX** y en los demás estados el costo depende de la zona y del peso del paquete.
-3. El cliente elige cómo pagar: con **tarjeta Visa o Mastercard** o con **transferencia**.
-4. Al confirmar, se abre su correo con el pedido completo y un folio, dirigido a **contacto@mexiusa.com**.
-5. MEXIUSA le responde con el enlace de pago o con la CLABE. El sitio nunca pide ni guarda datos de tarjeta.
+3. El cliente elige cómo pagar:
+   - **Tarjeta de débito o crédito:** paga ahí mismo, en el formulario seguro de Mercado Pago, y ve la confirmación al instante. Para activarlo, sigue [`servidor/LEEME.md`](servidor/LEEME.md).
+   - **Transferencia** (o tarjeta mientras no esté activado Mercado Pago): se abre su correo con el pedido y un folio, dirigido a **contacto@mexiusa.com**, y MEXIUSA le responde con la CLABE o el enlace de pago.
+4. El sitio nunca ve ni guarda números de tarjeta.
 
 ## Archivos
 
@@ -26,6 +27,12 @@ MEXIUSA Soluciones Comerciales tiene aquí su tienda en línea. Es un sitio est�
 - **Precios o productos:** se editan en `products.js`.
 - **Tarifas de envío:** se cambian en `data.js`, en `shippingZones` y en `SHIP_KG` (el peso de cada producto).
 - **Correo de pedidos:** se cambia en `data.js`, en `ordersEmail`.
+
+Si cambiaste precios, productos o tarifas, primero actualiza la lista oficial que usa el servidor de cobro:
+
+```powershell
+node herramientas/generar-precios.mjs
+```
 
 Después de cualquier cambio hay que subirlo para que se publique:
 

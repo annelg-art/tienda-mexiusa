@@ -33,6 +33,14 @@ window.STORE = {
   cutoffStd: '2026-12-16',       // AJUSTAR: último día para pedir fuera de CDMX y recibir antes del 24
   cutoffCdmx: '2026-12-20',      // AJUSTAR: último día para pedir en CDMX
   maxQtyPerItem: 5,
+  // Pago con tarjeta en la misma página (Mercado Pago · Card Payment Brick).
+  // publicKey: "Public Key" de tus credenciales de Mercado Pago (empieza con TEST- o APP_USR-). Es pública: puede ir aquí.
+  // apiUrl: dirección del servidor de cobro (carpeta servidor/). El Access Token NUNCA va aquí.
+  // Si alguno está vacío, la tienda sigue funcionando con pedido por correo.
+  mercadoPago: {
+    publicKey: '',
+    apiUrl: '',
+  },
 };
 
 /* Peso facturable estimado por producto (kg), ya empacado: máx(peso real, volumétrico).
@@ -90,7 +98,7 @@ window.LEGAL = {
 <h3>2. Precios</h3>
 <p>Todos los precios se expresan en moneda nacional (MXN) e incluyen IVA. El costo de envío se informa desglosado antes de confirmar la compra. El precio mostrado al confirmar es el total que se cobrará.</p>
 <h3>3. Proceso de compra</h3>
-<ul><li>Agrega productos al carrito y revisa el resumen.</li><li>Captura tus datos de entrega. En CDMX el envío es gratis; para otros estados el costo se calcula según el estado y el tamaño del paquete y se muestra antes de pagar.</li><li>Elige tu forma de pago preferida (tarjeta Visa o Mastercard, o transferencia bancaria) y revisa el total final.</li><li>Acepta expresamente estos términos y confirma: se abrirá tu correo con el pedido y su folio dirigido a contacto@mexiusa.com para que lo envíes.</li><li>Te respondemos con el enlace de pago seguro o la CLABE. El pedido se procesa al confirmarse tu pago. Nunca te pediremos datos de tarjeta por correo, teléfono o WhatsApp.</li></ul>
+<ul><li>Agrega productos al carrito y revisa el resumen.</li><li>Captura tus datos de entrega. En CDMX el envío es gratis; para otros estados el costo se calcula según el estado y el tamaño del paquete y se muestra antes de pagar.</li><li>Elige tu forma de pago preferida (tarjeta Visa o Mastercard, o transferencia bancaria) y revisa el total final.</li><li>Acepta expresamente estos términos y confirma.</li><li><strong>Tarjeta:</strong> capturas tu tarjeta en el formulario seguro de Mercado Pago dentro de esta página y recibes la confirmación al instante con tu folio. MEXIUSA no ve ni guarda el número de tu tarjeta.</li><li><strong>Transferencia:</strong> se abre tu correo con el pedido dirigido a contacto@mexiusa.com y te respondemos con la CLABE. El pedido se procesa al confirmarse tu pago.</li><li>Nunca te pediremos datos de tarjeta por correo, teléfono o WhatsApp.</li></ul>
 <h3>4. Disponibilidad</h3>
 <p>Si un producto no estuviera disponible después de pagado, te avisaremos dentro de 48 h y podrás elegir entre esperar, cambiarlo o recibir el reembolso total por el mismo medio de pago.</p>
 <h3>5. Fechas de temporada navideña</h3>

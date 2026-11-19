@@ -1,0 +1,367 @@
+{
+ "generado": "2026-11-19T22:37:58.475Z",
+ "maxQtyPerItem": 5,
+ "weightTiers": [
+  1,
+  3,
+  5,
+  10,
+  20,
+  30
+ ],
+ "extraPer10kg": 0.85,
+ "zones": [
+  {
+   "id": "cdmx",
+   "states": [
+    "Ciudad de México"
+   ],
+   "prices": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "id": "z1",
+   "states": [
+    "Estado de México"
+   ],
+   "prices": [
+    99,
+    119,
+    139,
+    179,
+    279,
+    379
+   ]
+  },
+  {
+   "id": "z2",
+   "states": [
+    "Hidalgo",
+    "Morelos",
+    "Puebla",
+    "Querétaro",
+    "Tlaxcala",
+    "Guanajuato",
+    "Michoacán"
+   ],
+   "prices": [
+    129,
+    149,
+    159,
+    199,
+    319,
+    429
+   ]
+  },
+  {
+   "id": "z3",
+   "states": [
+    "Jalisco",
+    "Aguascalientes",
+    "San Luis Potosí",
+    "Zacatecas",
+    "Colima",
+    "Nayarit",
+    "Veracruz",
+    "Oaxaca",
+    "Guerrero",
+    "Nuevo León",
+    "Coahuila",
+    "Tamaulipas",
+    "Durango"
+   ],
+   "prices": [
+    149,
+    169,
+    179,
+    239,
+    369,
+    499
+   ]
+  },
+  {
+   "id": "z4",
+   "states": [
+    "Yucatán",
+    "Quintana Roo",
+    "Campeche",
+    "Tabasco",
+    "Chiapas"
+   ],
+   "prices": [
+    169,
+    189,
+    209,
+    289,
+    449,
+    599
+   ]
+  },
+  {
+   "id": "z5",
+   "states": [
+    "Baja California",
+    "Baja California Sur",
+    "Sonora",
+    "Sinaloa",
+    "Chihuahua"
+   ],
+   "prices": [
+    189,
+    209,
+    229,
+    329,
+    509,
+    679
+   ]
+  }
+ ],
+ "products": {
+  "MX-BEB-001": {
+   "name": "Mecedora Automática Eléctrica para Bebé con Música",
+   "price": 1003,
+   "kg": 16
+  },
+  "MX-BEB-002": {
+   "name": "Silla Mecedora Eléctrica para Bebé con Música — Gris",
+   "price": 1100.75,
+   "kg": 16
+  },
+  "MX-BEB-003": {
+   "name": "Perro Robot Acrobático de 8 Ruedas con Luces LED",
+   "price": 682.1,
+   "kg": 3
+  },
+  "MX-BEB-004": {
+   "name": "Portabebés Ergonómico de Malla Transpirable",
+   "price": 295.8,
+   "kg": 2
+  },
+  "MX-BEB-005": {
+   "name": "Bloques Magnéticos de Azulejos STEM para Preescolar",
+   "price": 399,
+   "kg": 6
+  },
+  "MX-BEB-006": {
+   "name": "Peluche Inteligente con IA y Diálogo Interactivo",
+   "price": 1064,
+   "kg": 4
+  },
+  "MX-BEB-007": {
+   "name": "Peluche con Palmaditas y Música Relajante para Dormir",
+   "price": 520.6,
+   "kg": 3
+  },
+  "MX-BEB-008": {
+   "name": "Asiento Infantil para Inodoro con Escalera Ajustable",
+   "price": 386.75,
+   "kg": 8
+  },
+  "MX-BEB-009": {
+   "name": "Mochila Maternal Multifuncional con Cambiador",
+   "price": 249.05,
+   "kg": 4
+  },
+  "MX-BEB-010": {
+   "name": "Soporte de Baño para Bebé con Altura Ajustable",
+   "price": 707.75,
+   "kg": 8
+  },
+  "MX-MAS-001": {
+   "name": "Comedero Automático para Mascotas con Cámara y App WiFi",
+   "price": 731,
+   "kg": 5
+  },
+  "MX-MAS-002": {
+   "name": "Mochila Transportadora para Perros y Gatos",
+   "price": 283.1,
+   "kg": 5
+  },
+  "MX-COC-001": {
+   "name": "Dispensador de Huevos de 4 Niveles con Bandejas Rodantes",
+   "price": 157.7,
+   "kg": 4
+  },
+  "MX-COC-002": {
+   "name": "Mini Plancha Portátil con Pulverizador de Agua",
+   "price": 284.05,
+   "kg": 1
+  },
+  "MX-COC-003": {
+   "name": "Cafetera Espresso Portátil USB",
+   "price": 663,
+   "kg": 1
+  },
+  "MX-HOG-001": {
+   "name": "Lámpara LED de Escritorio con Control Táctil",
+   "price": 363.85,
+   "kg": 2
+  },
+  "MX-HOG-002": {
+   "name": "Almohada Ergonómica para Cuello con Soporte Cervical",
+   "price": 187,
+   "kg": 5
+  },
+  "MX-HOG-004": {
+   "name": "Bote de Basura Automático Blanco de 12 L",
+   "price": 471.2,
+   "kg": 9
+  },
+  "MX-HOG-005": {
+   "name": "Bote de Basura Ecológico con Sensor de Apertura Automática 16 L",
+   "price": 469.2,
+   "kg": 9
+  },
+  "MX-BEL-001": {
+   "name": "Mascarilla LED Facial Inalámbrica de Silicona — 7 Colores",
+   "price": 541.45,
+   "kg": 2
+  },
+  "MX-BEL-002": {
+   "name": "Plancha de Cabello Profesional con Pantalla Digital",
+   "price": 314.5,
+   "kg": 1
+  },
+  "MX-DEP-001": {
+   "name": "Tapete de Yoga de Corcho y Caucho Natural de 5 mm",
+   "price": 854.05,
+   "kg": 3
+  },
+  "MX-DEP-002": {
+   "name": "Auriculares Deportivos de Conducción Ósea Bluetooth",
+   "price": 386.75,
+   "kg": 1
+  },
+  "MX-DEP-003": {
+   "name": "Botella Deportiva Plegable de Silicona",
+   "price": 72.25,
+   "kg": 1
+  },
+  "MX-TEC-001": {
+   "name": "Cerradura Electrónica Biométrica con Huella y Código",
+   "price": 741.2,
+   "kg": 3
+  },
+  "MX-TEC-002": {
+   "name": "Calentador de Aire Eléctrico Portátil PTC de 1200 W",
+   "price": 291.65,
+   "kg": 3
+  },
+  "MX-TEC-003": {
+   "name": "Soporte Metálico para Laptop con Base Giratoria 360°",
+   "price": 523.6,
+   "kg": 2
+  },
+  "MX-TEC-004": {
+   "name": "Robot Aspiradora con Trapeador y Navegación Láser",
+   "price": 3042.15,
+   "kg": 9
+  },
+  "MX-TEC-005": {
+   "name": "Tablet Android de 10 Pulgadas con 3G",
+   "price": 1520,
+   "kg": 1
+  },
+  "MX-TEC-006": {
+   "name": "Monitor Portátil 15.6\" FHD IPS USB-C",
+   "price": 1938,
+   "kg": 2
+  },
+  "MX-TEC-007": {
+   "name": "Estación de Carga Inalámbrica Magnética 3 en 1",
+   "price": 477.85,
+   "kg": 1
+  },
+  "MX-TEC-008": {
+   "name": "Bocina Bluetooth Portátil Inalámbrica",
+   "price": 458.15,
+   "kg": 1
+  },
+  "MX-TEC-009": {
+   "name": "Audífonos TWS con Cancelación Activa de Ruido",
+   "price": 341.05,
+   "kg": 1
+  },
+  "MX-TEC-010": {
+   "name": "Controlador Plegable Bluetooth para Smartphone con Joystick",
+   "price": 249.05,
+   "kg": 1
+  },
+  "MX-TEC-011": {
+   "name": "Cámara de Coche Universal Delantera e Interior 1080p con App",
+   "price": 338.3,
+   "kg": 1
+  },
+  "MX-TEC-012": {
+   "name": "Webcam con Anillo de Luz LED y Micrófono",
+   "price": 300.9,
+   "kg": 1
+  },
+  "MX-NAV-001": {
+   "name": "Luces LED Lluvia de Meteoros para Navidad",
+   "price": 175.95,
+   "kg": 1
+  },
+  "MX-NAV-002": {
+   "name": "Guirnalda de Luces LED USB con Control Remoto",
+   "price": 134.9,
+   "kg": 1
+  },
+  "MX-NAV-003": {
+   "name": "Árbol de Navidad Inteligente con Luces LED RGB",
+   "price": 851.2,
+   "kg": 3
+  },
+  "MX-NAV-004": {
+   "name": "Set de 40 Esferas y Adornos Navideños",
+   "price": 192.1,
+   "kg": 5
+  },
+  "MX-JUG-001": {
+   "name": "Patinete Eléctrico Scooter LED",
+   "price": 1955,
+   "kg": 10
+  },
+  "MX-JUG-002": {
+   "name": "Set Pista de Carreras Modular LED con Loop 3D",
+   "price": 479,
+   "kg": 3
+  },
+  "MX-OUT-001": {
+   "name": "Cubrezapatos Impermeables de Látex",
+   "price": 269.8,
+   "kg": 1
+  },
+  "MX-OUT-002": {
+   "name": "Gorra con Ventilador Recargable USB",
+   "price": 48,
+   "kg": 1
+  },
+  "MX-OUT-004": {
+   "name": "Manta Eléctrica USB con Calefacción Portátil",
+   "price": 243.1,
+   "kg": 2
+  },
+  "MX-OUT-005": {
+   "name": "Set de Bolsas Organizadoras de Viaje Plegables",
+   "price": 198.55,
+   "kg": 1
+  },
+  "MX-OUT-006": {
+   "name": "Mochila Térmica Portátil",
+   "price": 149.6,
+   "kg": 2
+  },
+  "MX-OUT-007": {
+   "name": "GOMMY BLOC — Bloques de Goma",
+   "price": 100.3,
+   "kg": 2
+  }
+ }
+}
