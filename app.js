@@ -502,6 +502,7 @@
     ccnum: (v) => { const n = v.replace(/\s/g, ''); if (!luhn(n)) return 'Número de tarjeta no válido'; return cardBrand(n) ? true : 'Solo aceptamos tarjetas Visa o Mastercard'; },
     ccexp: (v) => validExp(v) || 'Fecha MM/AA vigente',
     cvv: (v) => /^\d{3,4}$/.test(v) || 'CVV de 3 o 4 dígitos',
+    ccname: (v) => /^[\p{L}][\p{L} .'-]{2,59}$/u.test(v) || 'Nombre como aparece en la tarjeta',
   };
   function luhn(n) { if (!/^\d{13,19}$/.test(n)) return false; let s = 0; for (let i = 0; i < n.length; i++) { let d = +n[n.length - 1 - i]; if (i % 2) { d *= 2; if (d > 9) d -= 9; } s += d; } return s % 10 === 0; }
   function validExp(v) { const m = /^(\d{2})\s?\/\s?(\d{2})$/.exec(v); if (!m) return false; const mm = +m[1], yy = 2000 + +m[2]; if (mm < 1 || mm > 12) return false; const n = new Date(); return yy > n.getFullYear() || (yy === n.getFullYear() && mm >= n.getMonth() + 1); }
@@ -534,92 +535,107 @@
       <p class="secure-line" style="justify-content:flex-start">${lockSvg} Conexión cifrada · No almacenamos tu tarjeta</p>
       <p class="small muted">Tienes <button class="link" data-legal="devoluciones">5 días hábiles</button> para revocar tu compra.</p>`;
   }
-  /* ---------- pago con tarjeta en la página (Mercado Pago Card Payment Brick) ----------
-     El número de tarjeta se captura en campos seguros (iframes) de Mercado Pago: esta página
-     nunca lo ve. Mercado Pago devuelve un token de un solo uso que nuestro servidor cobra
-     después de recalcular el total con los precios oficiales. */
-  const MP = STORE.mercadoPago || {};
-  const cardOnline = () => !!(MP.publicKey && MP.apiUrl);
-  let mpSdk = null, brickCtl = null;
-  function loadMpSdk() {
-    if (window.MercadoPago) return Promise.resolve();
-    if (mpSdk) return mpSdk;
-    mpSdk = new Promise((ok, fail) => {
-      const s = document.createElement('script'); s.src = 'https://sdk.mercadopago.com/js/v2'; s.async = true;
-      s.onload = ok; s.onerror = () => { mpSdk = null; fail(new Error('sdk')); }; document.head.appendChild(s);
-    });
-    return mpSdk;
+  /* ---------- pago con tarjeta en la página (Openpay by BBVA) ----------
+     El formulario es de MEXIUSA. Al pagar, openpay.js envía la tarjeta directo a Openpay
+     (BBVA, certificado PCI DSS) y devuelve un token de un solo uso: el número nunca llega
+     a nuestro servidor ni se guarda. El servidor cobra el token después de recalcular el
+     total con los precios oficiales (precios.json). */
+  const OP = STORE.openpay || {};
+  const cardOnline = () => !!(OP.merchantId && OP.publicKey && OP.apiUrl);
+  let opSdk = null;
+  const loadScript = (src) => new Promise((ok, fail) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => fail(new Error('sdk')); document.head.appendChild(s); });
+  function loadOpenpay() {
+    if (!opSdk) {
+      opSdk = loadScript('https://js.openpay.mx/openpay.v1.min.js')
+        .then(() => loadScript('https://js.openpay.mx/openpay-data.v1.min.js'))
+        .then(() => { window.OpenPay.setId(OP.merchantId); window.OpenPay.setApiKey(OP.publicKey); window.OpenPay.setSandboxMode(!!OP.sandbox); })
+        .catch((e) => { opSdk = null; throw e; });
+    }
+    return opSdk;
   }
-  function unmountBrick() { try { brickCtl?.unmount(); } catch { /* ya desmontado */ } brickCtl = null; }
   const newFolio = () => 'MXU-' + Date.now().toString(36).toUpperCase().slice(-6) + '-' + crypto.getRandomValues(new Uint16Array(1))[0].toString(16).toUpperCase().padStart(4, '0');
   const REJECT = {
-    cc_rejected_insufficient_amount: 'Tu tarjeta no tiene fondos suficientes. Prueba con otra tarjeta.',
-    cc_rejected_bad_filled_security_code: 'El código de seguridad (CVV) no es correcto.',
-    cc_rejected_bad_filled_date: 'La fecha de vencimiento no es correcta.',
-    cc_rejected_bad_filled_card_number: 'Revisa el número de tu tarjeta.',
-    cc_rejected_bad_filled_other: 'Revisa los datos de tu tarjeta.',
-    cc_rejected_call_for_authorize: 'Tu banco pide que autorices este pago. Llámales o autorízalo en su app e inténtalo de nuevo.',
-    cc_rejected_card_disabled: 'Tu tarjeta está desactivada. Actívala con tu banco o usa otra.',
-    cc_rejected_duplicated_payment: 'Ya hiciste un pago por este mismo monto. Si necesitas pagar de nuevo, usa otra tarjeta.',
-    cc_rejected_high_risk: 'El pago fue rechazado por seguridad. Prueba con otra tarjeta o paga por transferencia.',
-    cc_rejected_max_attempts: 'Llegaste al límite de intentos. Usa otra tarjeta.',
+    1006: 'Este pedido ya fue pagado. Revisa tu correo o escríbenos con tu folio.',
+    2004: 'El número de tarjeta no es válido. Revísalo.',
+    2005: 'La fecha de vencimiento ya pasó.',
+    2006: 'Falta el código de seguridad (CVV).',
+    2009: 'El código de seguridad (CVV) no es válido.',
+    3001: 'Tu banco rechazó la tarjeta. Prueba con otra o paga por transferencia.',
+    3002: 'La tarjeta está vencida.',
+    3003: 'La tarjeta no tiene fondos suficientes.',
+    3004: 'Tu banco rechazó la tarjeta. Prueba con otra o paga por transferencia.',
+    3005: 'El pago fue rechazado por seguridad. Prueba con otra tarjeta o paga por transferencia.',
+    3006: 'Tu tarjeta no permite compras en línea. Actívalas en la app de tu banco.',
+    3009: 'Tu banco rechazó la tarjeta. Prueba con otra o paga por transferencia.',
+    3010: 'Tu banco rechazó la tarjeta. Prueba con otra o paga por transferencia.',
+    3011: 'Tu banco pide que te comuniques con ellos para autorizar el pago.',
+    3012: 'Tu banco pide que autorices este pago. Hazlo en su app e inténtalo de nuevo.',
     price_changed: 'Los precios se actualizaron. Cierra y vuelve a abrir tu carrito para ver el total correcto.',
   };
-  async function mountBrick() {
-    const box = $('#cardBrick', co); if (!box) return;
-    const t = totals(order.data.state), err = $('#payErr', co);
-    try { await loadMpSdk(); } catch { box.innerHTML = '<p class="info-box">No se pudo cargar el pago con tarjeta. Revisa tu conexión o elige transferencia.</p>'; return; }
-    if (!$('#cardBrick', co)) return; // el usuario cambió de paso mientras cargaba
-    unmountBrick();
-    const fail = () => { if (!$('#cardBrick', co)) return; unmountBrick(); $('#cardBrick', co).innerHTML = '<p class="info-box">El pago con tarjeta no está disponible en este momento. Elige <strong>Transferencia bancaria</strong> o inténtalo en unos minutos.</p>'; };
-    // Si Mercado Pago no responde (clave inválida, red caída), no dejar el panel cargando para siempre.
-    const watchdog = setTimeout(() => { if ($('#cardBrick', co) === box && !box.classList.contains('is-ready')) fail(); }, 12000);
-    try {
-    const mp = new window.MercadoPago(MP.publicKey, { locale: 'es-MX' });
-    brickCtl = await mp.bricks().create('cardPayment', 'cardBrick', {
-      initialization: { amount: t.total, payer: { email: order.data.email } },
-      customization: {
-        visual: { style: { theme: 'default', customVariables: { baseColor: '#c8102e', formBackgroundColor: '#ffffff', borderRadiusLarge: '16px', borderRadiusMedium: '12px' } }, texts: { formSubmit: `Pagar ${fmt(t.total)}` } },
-        paymentMethods: { maxInstallments: 12 },
-      },
-      callbacks: {
-        onReady: () => { clearTimeout(watchdog); box.classList.add('is-ready'); },
-        onError: (e) => { console.warn('Mercado Pago', e?.message || e); if (e?.type === 'critical') fail(); },
-        onSubmit: (cardData) => new Promise((resolve, reject) => {
-          err.textContent = '';
-          if (!$('#acceptTerms', co).checked) {
-            $('#termsErr', co).textContent = 'Debes aceptar los términos y el aviso de privacidad para pagar.';
-            $('#acceptTerms', co).focus(); reject(); return;
-          }
-          order.marketing = $('#acceptMkt', co).checked;
-          if (!order.folio) order.folio = newFolio();
-          order.busy = true;
-          const d = order.data;
-          fetch(MP.apiUrl.replace(/\/$/, '') + '/pagar', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              folio: order.folio, amount: t.total, card: cardData,
-              items: t.lines.map(({ p, qty }) => ({ id: p.id, qty })),
-              buyer: { name: d.name, email: d.email, phone: d.phone, street: d.street, col: d.col, cp: d.cp, city: d.city, state: d.state, ref: d.ref || '' },
-              gift: d.gift ? { to: d.giftTo, from: d.giftFrom || '', msg: d.giftMsg || '' } : null,
-              invoice: d.invoice ? { rfc: d.rfc, cp: d.cfdiCp, regimen: d.regimen || '' } : null,
-              marketing: !!order.marketing,
-            }),
-          }).then((r) => r.json().catch(() => ({}))).then((res) => {
-            order.busy = false;
-            if (res.status === 'approved' || res.status === 'in_process' || res.status === 'pending') {
-              resolve(); order.payment = res; order.step = 3; unmountBrick(); renderCheckout();
-              if (res.status === 'approved') { state.cart = {}; saveCart(); updateBadges(); renderCart(); confetti(); }
-              return;
-            }
-            err.textContent = REJECT[res.status_detail] || REJECT[res.error] || 'Tu banco rechazó el pago. Revisa los datos o prueba con otra tarjeta.';
-            reject();
-          }).catch(() => { order.busy = false; err.textContent = 'No pudimos conectar con el servidor de pagos. No se hizo ningún cargo; inténtalo de nuevo.'; reject(); });
-        }),
-      },
-    });
-    } catch (e) { clearTimeout(watchdog); console.warn('Mercado Pago', e?.message || e); fail(); }
+  const tokenize = (card) => new Promise((ok, fail) => window.OpenPay.token.create(card, (r) => ok(r.data.id), (e) => fail(e?.data || e)));
+  const brandOf = (n) => cardBrand(n.replace(/\D/g, ''));
+  function cardPreview() {
+    const num = ($('#f_ccnum', co)?.value || '').replace(/\D/g, ''), b = brandOf(num);
+    const shown = (num + '•'.repeat(Math.max(0, 16 - num.length))).slice(0, 16).replace(/(.{4})/g, '$1 ').trim();
+    const pv = $('#ccPreview', co); if (!pv) return;
+    pv.dataset.brand = b.toLowerCase();
+    $('.ccard__num', pv).textContent = shown;
+    $('.ccard__name', pv).textContent = ($('#f_ccname', co)?.value || 'NOMBRE DEL TITULAR').toUpperCase().slice(0, 26);
+    $('.ccard__exp', pv).textContent = $('#f_ccexp', co)?.value || 'MM/AA';
+    $('.ccard__brand', pv).innerHTML = b === 'Visa' ? '<span class="pm pm--visa">VISA</span>' : b === 'Mastercard' ? '<span class="pm pm--mc"><i></i><i></i></span>' : '';
   }
+  async function payWithCard() {
+    const btn = $('#payBtn', co), err = $('#payErr', co), t = totals(order.data.state), d = order.data;
+    err.textContent = ''; order.busy = true; btn.disabled = true; btn.textContent = 'Procesando pago…';
+    const [mm, yy] = $('#f_ccexp', co).value.split('/').map((s) => s.trim());
+    try {
+      await loadOpenpay();
+      const deviceSessionId = window.OpenPay.deviceData.setup('coForm', 'deviceIdHidden');
+      const token = await tokenize({
+        card_number: $('#f_ccnum', co).value.replace(/\D/g, ''), holder_name: $('#f_ccname', co).value.trim(),
+        expiration_month: mm, expiration_year: yy, cvv2: $('#f_cvv', co).value,
+      });
+      $('#f_ccnum', co).value = ''; $('#f_cvv', co).value = ''; // no dejar datos sensibles en pantalla
+      if (!order.folio) order.folio = newFolio();
+      const r = await fetch(OP.apiUrl.replace(/\/$/, '') + '/pagar', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          folio: order.folio, amount: t.total, token, deviceSessionId,
+          items: t.lines.map(({ p, qty }) => ({ id: p.id, qty })),
+          buyer: { name: d.name, email: d.email, phone: d.phone, street: d.street, col: d.col, cp: d.cp, city: d.city, state: d.state, ref: d.ref || '' },
+          gift: d.gift ? { to: d.giftTo, from: d.giftFrom || '', msg: d.giftMsg || '' } : null,
+          invoice: d.invoice ? { rfc: d.rfc, cp: d.cfdiCp, regimen: d.regimen || '' } : null,
+          marketing: !!order.marketing,
+        }),
+      });
+      const res = await r.json().catch(() => ({}));
+      if (res.redirect) { location.href = res.redirect; return; } // 3-D Secure: el banco confirma y regresa a la tienda
+      if (res.status === 'completed') {
+        order.payment = res; order.step = 3; renderCheckout();
+        state.cart = {}; saveCart(); updateBadges(); renderCart(); confetti();
+        return;
+      }
+      throw res;
+    } catch (e) {
+      err.textContent = e?.message === 'sdk' ? 'No se pudo cargar el pago con tarjeta. Revisa tu conexión o elige transferencia.'
+        : e instanceof TypeError ? 'No pudimos conectar con el servidor de pagos. No se hizo ningún cargo; inténtalo de nuevo.'
+        : REJECT[e?.error_code] || REJECT[e?.error] || 'Tu banco rechazó el pago. Revisa los datos o prueba con otra tarjeta.';
+    } finally {
+      order.busy = false;
+      if (btn.isConnected) { btn.disabled = false; btn.textContent = `Pagar ${fmt(t.total)}`; }
+    }
+  }
+  // Regreso desde la verificación 3-D Secure del banco: ?pago=FOLIO&id=CARGO
+  (async () => {
+    const q = new URLSearchParams(location.search), id = q.get('id'), folio = q.get('pago');
+    if (!id || !folio || !cardOnline()) return;
+    history.replaceState(null, '', location.pathname);
+    try {
+      const res = await fetch(`${OP.apiUrl.replace(/\/$/, '')}/estado?id=${encodeURIComponent(id)}`).then((r) => r.json());
+      if (res.status === 'completed') { state.cart = {}; saveCart(); updateBadges(); renderCart(); confetti(); toast(`¡Pago aprobado! Folio ${res.folio || folio}`); }
+      else toast('El pago no se completó. No se hizo ningún cargo; puedes intentarlo de nuevo.');
+    } catch { toast(`No pudimos confirmar tu pago. Escríbenos a ${STORE.ordersEmail} con tu folio ${folio}.`); }
+  })();
 
   const stepsHTML = () => `<ol class="steps">${(order.quote ? ['Entrega', 'Cotiza tu envío', 'Pago'] : ['Entrega', 'Pago y revisión', 'Confirmación']).map((n, i) => `<li class="${i + 1 === order.step ? 'on' : i + 1 < order.step ? 'done' : ''}" ${i + 1 === order.step ? 'aria-current="step"' : ''}>${i + 1}. ${n}</li>`).join('')}</ol>`;
 
@@ -686,7 +702,7 @@
         <div class="info-box"><strong>Enviar a:</strong> ${esc(d.gift && d.giftTo ? d.giftTo : d.name)} · ${esc(d.street)}, ${esc(d.col)}, C.P. ${esc(d.cp)}, ${esc(d.city)}, ${esc(d.state)} · Tel. ${esc(d.phone)}${d.gift ? ' · 🎁 Envío como regalo' : ''} <button type="button" class="link" id="editAddr">Editar</button></div>
         <h3 style="margin:16px 0 10px;font-size:16px">¿Cómo quieres pagar?</h3>
         <div class="opts">
-          <label class="opt"><input type="radio" name="pay" value="card" ${order.pay === 'card' ? 'checked' : ''}><div><strong>Tarjeta de débito o crédito</strong><span class="muted">${cardOnline() ? 'Paga aquí mismo · protegido por Mercado Pago' : 'Visa o Mastercard · te enviamos un enlace de pago seguro'}</span></div><span class="paymarks paymarks--sm" aria-hidden="true"><span class="pm pm--visa">VISA</span><span class="pm pm--mc"><i></i><i></i></span></span></label>
+          <label class="opt"><input type="radio" name="pay" value="card" ${order.pay === 'card' ? 'checked' : ''}><div><strong>Tarjeta de débito o crédito</strong><span class="muted">${cardOnline() ? 'Visa o Mastercard · paga aquí mismo de forma segura' : 'Visa o Mastercard · te enviamos un enlace de pago seguro'}</span></div><span class="paymarks paymarks--sm" aria-hidden="true"><span class="pm pm--visa">VISA</span><span class="pm pm--mc"><i></i><i></i></span></span></label>
           <label class="opt"><input type="radio" name="pay" value="spei" ${order.pay === 'spei' ? 'checked' : ''}><div><strong>Transferencia bancaria</strong><span class="muted">Te enviamos la CLABE y el monto exacto</span></div></label>
         </div>
         <div class="checks">
@@ -695,24 +711,32 @@
           <p class="small" id="termsErr" style="color:var(--err)" aria-live="polite"></p>
         </div>
         ${online ? `<section class="cardpay" aria-labelledby="cardpayT">
-          <header class="cardpay__head"><h3 id="cardpayT">Datos de tu tarjeta</h3><span class="cardpay__lock">${lockSvg} Pago seguro con <b>Mercado Pago</b></span></header>
-          <div id="cardBrick" class="cardpay__brick"><div class="cardpay__skel" aria-hidden="true"><i></i><i></i><i class="half"></i><i class="half"></i><i></i></div><p class="small muted" role="status">Cargando formulario seguro…</p></div>
+          <header class="cardpay__head"><h3 id="cardpayT">Datos de tu tarjeta</h3><span class="cardpay__lock">${lockSvg} Pago cifrado · Visa y Mastercard</span></header>
+          <div class="cardpay__body">
+            <div class="ccard" id="ccPreview" aria-hidden="true"><span class="ccard__chip"></span><span class="ccard__brand"></span><span class="ccard__num">•••• •••• •••• ••••</span><span class="ccard__name">NOMBRE DEL TITULAR</span><span class="ccard__exp">MM/AA</span></div>
+            <div class="fgrid cardpay__fields">
+              ${field('ccnum', 'Número de tarjeta', { full: true, ac: 'cc-number', im: 'numeric', max: 23, ph: '1234 5678 9012 3456' })}
+              ${field('ccname', 'Nombre como aparece en la tarjeta', { full: true, ac: 'cc-name', max: 60 })}
+              ${field('ccexp', 'Vencimiento', { ac: 'cc-exp', im: 'numeric', max: 5, ph: 'MM/AA' })}
+              ${field('cvv', 'Código de seguridad', { type: 'password', ac: 'cc-csc', im: 'numeric', max: 4, ph: 'CVV' })}
+            </div>
+          </div>
           <p class="cardpay__err" id="payErr" role="alert"></p>
-          <p class="small muted">Tus datos de tarjeta viajan cifrados directo a Mercado Pago; MEXIUSA no los ve ni los guarda. Al pagar aceptas el cargo de <strong>${fmt(t.total)}</strong> MXN.</p>
+          <p class="small muted">Tarjetas de débito o crédito Visa y Mastercard. Tus datos viajan cifrados directo al procesador de BBVA (Openpay); MEXIUSA no ve ni guarda el número de tu tarjeta. Al pagar aceptas el cargo de <strong>${fmt(t.total)}</strong> MXN.</p>
         </section>
-        <div class="co__nav"><button type="button" class="btn btn--ghost" id="backStep">Atrás</button></div>`
+        <div class="co__nav"><button type="button" class="btn btn--ghost" id="backStep">Atrás</button><button class="btn btn--red btn--lg" type="submit" id="payBtn">Pagar ${fmt(t.total)}</button></div>`
         : `<div class="ship-note ship-note--co"><span aria-hidden="true">✉️</span><p><strong>Así funciona:</strong> al confirmar se abre tu correo con el pedido completo dirigido a <strong>${esc(STORE.ordersEmail)}</strong>. Solo presiona <em>Enviar</em>. Te respondemos con el ${order.pay === 'card' ? 'enlace de pago' : 'número de CLABE'} y el total. <strong>No se cobra nada</strong> hasta que tú pagues; nunca te pediremos datos de tarjeta por correo.</p></div>
         <div class="co__nav"><button type="button" class="btn btn--ghost" id="backStep">Atrás</button>
           <button class="btn btn--red btn--lg" type="submit" id="payBtn">Enviar pedido por correo · ${fmt(t.total)}</button></div>`}
       </form>`;
     } else if (order.payment) {
-      const pay = order.payment, ok = pay.status === 'approved';
+      const pay = order.payment, ok = pay.status === 'completed';
       main = `<div class="done-wrap">
         <svg class="check-anim" viewBox="0 0 84 84" aria-hidden="true"><circle cx="42" cy="42" r="40" fill="none" stroke="${ok ? 'var(--ok)' : 'var(--gold)'}" stroke-width="4"/><path d="M26 43l11 11 21-23" fill="none" stroke="${ok ? 'var(--ok)' : 'var(--gold)'}" stroke-width="5" stroke-linecap="round"/></svg>
         <h2 id="coTitle">${ok ? '¡Pago aprobado! 🎄' : 'Tu pago está en revisión'}</h2>
         <p>Folio <span class="folio">${esc(order.folio)}</span></p>
         ${pay.last4 ? `<p class="muted">Tarjeta terminación <strong>${esc(pay.last4)}</strong>${pay.id ? ` · Operación ${esc(String(pay.id))}` : ''}</p>` : ''}
-        <p class="muted">${ok ? `Recibimos tu pago de <strong>${fmt(pay.amount || 0)}</strong>. Mercado Pago te enviará el comprobante a <strong>${esc(order.data.email)}</strong> y nosotros te escribiremos con la guía de rastreo.` : 'Mercado Pago está revisando tu pago (suele tardar unos minutos). Te avisaremos por correo cuando se apruebe; no se hará ningún cargo si se rechaza.'}</p>
+        <p class="muted">${ok ? `Recibimos tu pago de <strong>${fmt(pay.amount || 0)}</strong>. Te enviaremos la confirmación a <strong>${esc(order.data.email)}</strong> y después la guía de rastreo. En tu estado de cuenta aparecerá como MEXIUSA.` : 'Tu banco está revisando el pago. Te avisaremos por correo; si se rechaza no se hará ningún cargo.'}</p>
         <div class="quote__actions" style="width:min(380px,100%)">
           <a class="btn btn--ghost btn--lg" href="${esc(mailtoHref())}">Enviar copia del pedido a MEXIUSA</a>
           <button type="button" class="btn btn--red btn--lg" data-close>Listo</button></div>
@@ -733,7 +757,6 @@
         <p class="info-box">Si prefieres, envía el pedido copiado a ${esc(STORE.ordersEmail)} desde cualquier correo. Recuerda: tienes 5 días hábiles desde la entrega para revocar tu compra, y los regalos se pueden cambiar hasta el 15 de enero.</p>
       </div>`;
     }
-    unmountBrick();
     co.innerHTML = `<button class="round modal__x" data-close aria-label="Cerrar">×</button><div class="co"><div class="co__main">${stepsHTML()}${main}</div><aside class="co__side" aria-label="Resumen">${sideHTML()}</aside></div>`;
     bindCheckout();
   }
@@ -765,7 +788,7 @@
     const L = [`Pedido MEXIUSA · Bazar Navideño`, `Folio: ${order.folio}`, '', 'PRODUCTOS',
       ...t.lines.map(({ p, qty, sub }) => `• ${p.name} (${p.id}) × ${qty} = ${fmt(sub)}`), '',
       `Subtotal: ${fmt(t.subtotal)}`, `Envío (${d.state}): ${t.ship ? fmt(t.ship) : 'Gratis'}`, `TOTAL: ${fmt(t.total)} MXN (IVA incluido)`, '',
-      order.payment ? `PAGADO CON TARJETA en la tienda · Mercado Pago operación ${order.payment.id} · estado: ${order.payment.status === 'approved' ? 'aprobado' : 'en revisión'}`
+      order.payment ? `PAGADO CON TARJETA en la tienda · Openpay operación ${order.payment.id} · tarjeta ****${order.payment.last4 || ''} · estado: ${order.payment.status === 'completed' ? 'aprobado' : 'en revisión'}`
         : `Forma de pago preferida: ${order.pay === 'card' ? 'Tarjeta Visa/Mastercard (enviar enlace de pago)' : 'Transferencia bancaria (enviar CLABE)'}`, '',
       'DATOS DE ENTREGA', `Nombre: ${d.name}`, `Teléfono: ${d.phone}`, `Correo: ${d.email}`,
       `Dirección: ${d.street}, Col. ${d.col}, C.P. ${d.cp}, ${d.city}, ${d.state}`];
@@ -816,12 +839,11 @@
     $('#backStep', co)?.addEventListener('click', () => { order.step = 1; renderCheckout(); });
     $('#editAddr', co)?.addEventListener('click', () => { order.step = 1; renderCheckout(); });
     $('#acceptTerms', co)?.addEventListener('change', () => { $('#termsErr', co).textContent = ''; });
-    if ($('#cardBrick', co)) mountBrick();
+    ['ccnum', 'ccname', 'ccexp'].forEach((id) => $(`#f_${id}`, co)?.addEventListener('input', cardPreview));
 
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       if (form.querySelector('.hp')?.value) return; // bot
-      if (order.step === 2 && $('#cardBrick', co)) return; // el cobro lo hace el botón del formulario de Mercado Pago
       if (order.step === 1) {
         const ids = ['name', 'email', 'phone', 'street', 'col', 'cp', 'city', 'state'];
         if (order.data.gift) ids.push('giftTo');
@@ -834,6 +856,10 @@
       } else if (order.step === 2) {
         if (!$('#acceptTerms', co).checked) { $('#termsErr', co).textContent = 'Debes aceptar los términos y el aviso de privacidad para continuar.'; $('#acceptTerms', co).focus(); return; }
         order.marketing = $('#acceptMkt', co).checked;
+        if (order.pay === 'card' && cardOnline()) {
+          if (order.busy || !validate(['ccnum', 'ccname', 'ccexp', 'cvv'])) return;
+          payWithCard(); return;
+        }
         if (!order.folio) order.folio = newFolio();
         /* Sin servidor: el pedido se envía desde el correo del cliente.
            FUTURO: POST /api/orders con { items:[{id,qty}], address, gift } + procesador de pagos (PCI DSS). */
@@ -847,7 +873,7 @@
     order.step = 1; order.folio = ''; order.last4 = ''; order.quote = false; order.ref = ''; order.payment = null; renderCheckout(); co.showModal(); document.body.classList.add('lock');
   }
   co.addEventListener('click', (e) => { if (e.target.closest('[data-close]')) co.close(); });
-  co.addEventListener('close', () => { unmountBrick(); document.body.classList.remove('lock'); if (order.step === 3) { order.data = {}; order.step = 1; order.payment = null; } });
+  co.addEventListener('close', () => { document.body.classList.remove('lock'); if (order.step === 3) { order.data = {}; order.step = 1; order.payment = null; } });
   co.addEventListener('cancel', (e) => { if (order.busy) e.preventDefault(); });
 
   /* ---------- confeti festivo ---------- */

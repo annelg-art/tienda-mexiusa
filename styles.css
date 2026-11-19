@@ -636,3 +636,21 @@ em { font-family: var(--serif); font-style: italic; font-weight: 500; }
 .cardpay > .small { padding: 8px 18px 16px; margin: 0; }
 @keyframes skel { to { background-position: -200% 0; } }
 @media (prefers-reduced-motion: reduce) { .cardpay__skel i { animation: none; } }
+
+/* formulario de tarjeta propio + vista previa de la tarjeta */
+.cardpay__body { display: grid; grid-template-columns: minmax(0, 250px) minmax(0, 1fr); gap: 18px; padding: 18px; align-items: start; }
+.cardpay__fields { margin: 0; }
+.ccard { position: relative; aspect-ratio: 1.586; border-radius: 16px; padding: 16px 18px; color: #fff; display: grid; grid-template-rows: auto 1fr auto auto; overflow: hidden;
+  background: radial-gradient(120% 140% at 0% 0%, #1d5a43 0%, var(--pine) 55%, #062619 100%); box-shadow: 0 14px 30px -16px rgba(11,59,42,.7), inset 0 0 0 1px rgba(255,255,255,.08);
+  transition: background .5s ease; font-variant-numeric: tabular-nums; }
+.ccard::after { content: ""; position: absolute; inset: -40% -10% auto auto; width: 70%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle, rgba(232,207,142,.28), transparent 65%); pointer-events: none; }
+.ccard[data-brand="visa"] { background: radial-gradient(120% 140% at 0% 0%, #2a4fb0 0%, var(--navy) 55%, #0a1a45 100%); }
+.ccard[data-brand="mastercard"] { background: radial-gradient(120% 140% at 0% 0%, #3a3a3a 0%, #1b1b1b 60%, #000 100%); }
+.ccard__chip { width: 38px; height: 28px; border-radius: 6px; background: linear-gradient(135deg, var(--gold-2), var(--gold)); }
+.ccard__brand { position: absolute; top: 14px; right: 16px; }
+.ccard__brand .pm { background: #fff; }
+.ccard__num { align-self: end; font-size: clamp(15px, 1.6vw, 18px); letter-spacing: .08em; font-weight: 600; white-space: nowrap; }
+.ccard__name { font-size: 11px; letter-spacing: .08em; opacity: .9; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 8px; }
+.ccard__exp { position: absolute; right: 18px; bottom: 16px; font-size: 12px; opacity: .9; }
+#payBtn:disabled { opacity: .7; cursor: progress; }
+@media (max-width: 720px) { .cardpay__body { grid-template-columns: 1fr; } .ccard { max-width: 300px; width: 100%; justify-self: center; } }

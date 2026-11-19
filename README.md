@@ -7,9 +7,9 @@ MEXIUSA Soluciones Comerciales tiene aquí su tienda en línea. Es un sitio est�
 1. El cliente arma su carrito y captura sus datos de entrega.
 2. El envío se calcula en el momento: es **gratis en CDMX** y en los demás estados el costo depende de la zona y del peso del paquete.
 3. El cliente elige cómo pagar:
-   - **Tarjeta de débito o crédito:** paga ahí mismo, en el formulario seguro de Mercado Pago, y ve la confirmación al instante. Para activarlo, sigue [`servidor/LEEME.md`](servidor/LEEME.md).
-   - **Transferencia** (o tarjeta mientras no esté activado Mercado Pago): se abre su correo con el pedido y un folio, dirigido a **contacto@mexiusa.com**, y MEXIUSA le responde con la CLABE o el enlace de pago.
-4. El sitio nunca ve ni guarda números de tarjeta.
+   - **Tarjeta de débito o crédito:** paga ahí mismo con Visa o Mastercard, en el formulario de la tienda (cobro procesado por Openpay de BBVA), y ve la confirmación al instante. Para activarlo, sigue [`servidor/LEEME.md`](servidor/LEEME.md).
+   - **Transferencia** (o tarjeta mientras no esté activado Openpay): se abre su correo con el pedido y un folio, dirigido a **contacto@mexiusa.com**, y MEXIUSA le responde con la CLABE o el enlace de pago.
+4. La tarjeta va directo del navegador a Openpay; MEXIUSA nunca recibe ni guarda el número.
 
 ## Archivos
 
